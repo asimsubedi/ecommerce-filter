@@ -3,14 +3,10 @@
  */
 package com.nivtek.ecommerce.entity;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
 
 /**
  * @author AsimSubedi
@@ -28,27 +24,21 @@ public class Product {
 	private float price;
 
 	private int rating;
+	private float capacity;
 
-	@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-	@JoinColumn(name = "brand_id")
-	private Brand brand;
-
-	@ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-	@JoinColumn(name = "productId")
-	private Category category = new Category();
-
-	private String capacity;
+	private String brand;
+	private String category;
 
 	public Product() {
 	}
 
-	public Product(String name, float price, int rating, Brand brand, Category category, String capacity) {
+	public Product(String name, float price, int rating, float capacity, String brand, String category) {
 		this.name = name;
 		this.price = price;
 		this.rating = rating;
+		this.capacity = capacity;
 		this.brand = brand;
 		this.category = category;
-		this.capacity = capacity;
 	}
 
 	/**
@@ -108,51 +98,51 @@ public class Product {
 	}
 
 	/**
-	 * @return the brand
-	 */
-	public Brand getBrand() {
-		return brand;
-	}
-
-	/**
-	 * @param brand the brand to set
-	 */
-	public void setBrand(Brand brand) {
-		this.brand = brand;
-	}
-
-	/**
-	 * @return the categories
-	 */
-	public Category getCategories() {
-		return category;
-	}
-
-	/**
-	 * @param categories the categories to set
-	 */
-	public void setCategories(Category category) {
-		this.category = category;
-	}
-
-	/**
 	 * @return the capacity
 	 */
-	public String getCapacity() {
+	public float getCapacity() {
 		return capacity;
 	}
 
 	/**
 	 * @param capacity the capacity to set
 	 */
-	public void setCapacity(String capacity) {
+	public void setCapacity(float capacity) {
 		this.capacity = capacity;
+	}
+
+	/**
+	 * @return the brand
+	 */
+	public String getBrand() {
+		return brand;
+	}
+
+	/**
+	 * @param brand the brand to set
+	 */
+	public void setBrand(String brand) {
+		this.brand = brand;
+	}
+
+	/**
+	 * @return the category
+	 */
+	public String getCategory() {
+		return category;
+	}
+
+	/**
+	 * @param category the category to set
+	 */
+	public void setCategory(String category) {
+		this.category = category;
 	}
 
 	@Override
 	public String toString() {
-		return "Product [id=" + id + ", name=" + name + ", price=" + price + ", rating=" + rating + ", brand=" + brand
-				+ ", categories=" + category + ", capacity=" + capacity + "]";
+		return "Product [id=" + id + ", name=" + name + ", price=" + price + ", rating=" + rating + ", capacity="
+				+ capacity + ", brand=" + brand + ", category=" + category + "]";
 	}
 
 	@Override
@@ -160,7 +150,7 @@ public class Product {
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + ((brand == null) ? 0 : brand.hashCode());
-		result = prime * result + ((capacity == null) ? 0 : capacity.hashCode());
+		result = prime * result + Float.floatToIntBits(capacity);
 		result = prime * result + ((category == null) ? 0 : category.hashCode());
 		result = prime * result + id;
 		result = prime * result + ((name == null) ? 0 : name.hashCode());
@@ -183,10 +173,7 @@ public class Product {
 				return false;
 		} else if (!brand.equals(other.brand))
 			return false;
-		if (capacity == null) {
-			if (other.capacity != null)
-				return false;
-		} else if (!capacity.equals(other.capacity))
+		if (Float.floatToIntBits(capacity) != Float.floatToIntBits(other.capacity))
 			return false;
 		if (category == null) {
 			if (other.category != null)
@@ -206,7 +193,5 @@ public class Product {
 			return false;
 		return true;
 	}
-
-
 
 }

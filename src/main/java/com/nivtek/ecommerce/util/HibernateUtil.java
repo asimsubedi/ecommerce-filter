@@ -5,8 +5,6 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.service.ServiceRegistry;
 
-import com.nivtek.ecommerce.entity.Brand;
-import com.nivtek.ecommerce.entity.Category;
 import com.nivtek.ecommerce.entity.Product;
 
 
@@ -30,8 +28,6 @@ public class HibernateUtil {
 		configuration.configure();
 
 		configuration.addAnnotatedClass(Product.class);
-		configuration.addAnnotatedClass(Category.class);
-		configuration.addAnnotatedClass(Brand.class);
 
 		// register the service. we are starting essential hibernate SErvice
 		ServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
