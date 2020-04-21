@@ -1,6 +1,3 @@
-/**
- * 
- */
 package com.nivtek.ecommerce.app;
 
 import java.util.List;
@@ -19,10 +16,11 @@ import com.nivtek.ecommerce.util.HibernateUtil;
  */
 public class AppProductFilter {
 
-	// filters on rating, capacity, brand and price [difficulty in fetching brand as
-	// separate table :( ]
-	private static final String FILTER_QUERY = "FROM Product WHERE rating >= :rating AND brand = :brand AND"
-			+ "  price between :minprice and :maxprice AND capacity >= :capacity";
+	//
+//	private static final String FILTER_QUERY = "FROM Product WHERE rating >= :rating AND brand = :brand AND"
+//			+ "  price between :minprice and :maxprice AND capacity >= :capacity";
+	
+	private static final String FILTER_QUERY = "FROM Product WHERE  brand in :brand ";
 
 	/**
 	 * @param args
@@ -45,8 +43,13 @@ public class AppProductFilter {
 
 		System.out.print("Filter By Capacity: ");
 		float inputCapacity = scanner.nextFloat();
+		
+		System.out.println("Enter Your Filters: ");
+		String inputFilters = scanner.next();
 
 		scanner.close();
+		
+		System.out.println("Input Filters: " + inputFilters);
 
 		System.out.println("\n=== SUMMARY ===\nYour Chosen filters are: ");
 		System.out.println("Rating Greater Than: " + inputRating + "\nBrand: " + inputBrand + "\nMin Price: "
@@ -56,13 +59,12 @@ public class AppProductFilter {
 		Session session = sessionFactory.openSession();
 
 		Query query = session.createQuery(FILTER_QUERY);
-		
-		query.setParameter("rating", inputRating);
+
+		//query.setParameter("rating", inputRating);
 		query.setParameter("brand", inputBrand);
-		query.setParameter("minprice", inputPriceMin);
-		query.setParameter("maxprice", inputPriceMax);
-		query.setParameter("capacity", inputCapacity);
-		
+//		query.setParameter("minprice", inputPriceMin);
+//		query.setParameter("maxprice", inputPriceMax);
+//		query.setParameter("capacity", inputCapacity);
 
 		List<Product> products = query.list();
 
