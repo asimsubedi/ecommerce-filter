@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.stream.Collectors;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -26,16 +27,13 @@ public class AppDynamicFilter {
 	 */
 	public static void main(String[] args) {
 
-		HashMap<String, String> filterTodo = new HashMap<String, String>();
+		Map<String, String> filterTodo = new HashMap<String, String>();
 
 		String userInputs = getFilterInputs();
 
-		List<String> filterParams = Arrays.asList(userInputs.trim().split(","));
-
-		for (String str : filterParams) {
-			String[] keyvalue = str.split(":");
-			filterTodo.put(keyvalue[0], keyvalue[1]);
-		}
+		// Convert The userInput into filterTodo as keyvalue pair
+		filterTodo = Arrays.asList(userInputs.trim().split(",")).stream().map(str -> str.split(":"))
+				.collect(Collectors.toMap(str -> str[0], str -> str[1]));
 
 		// generate our filterquery
 		String filterQuery = createQueryBasedOnInput(filterTodo);
@@ -81,7 +79,7 @@ public class AppDynamicFilter {
 	 * @param filterTodo
 	 * @return String which is filter Query we use in session.createQuery();
 	 */
-	private static String createQueryBasedOnInput(HashMap<String, String> filterTodo) {
+	private static String createQueryBasedOnInput(Map<String, String> filterTodo) {
 
 		String FILTER_QUERY = "FROM Product ";
 
