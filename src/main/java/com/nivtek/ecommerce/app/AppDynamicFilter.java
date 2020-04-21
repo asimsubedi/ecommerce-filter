@@ -31,13 +31,12 @@ public class AppDynamicFilter {
 
 		String userInputs = getFilterInputs();
 
-		// Convert The userInput into filterTodo as keyvalue pair
+		// Convert The userInput into filterTodo as key-value pair
 		filterTodo = Arrays.asList(userInputs.trim().split(",")).stream().map(str -> str.split(":"))
 				.collect(Collectors.toMap(str -> str[0], str -> str[1]));
 
-		// generate our filterquery
+		// generate our filter query
 		String filterQuery = createQueryBasedOnInput(filterTodo);
-
 		System.out.println("filter query is: \n" + filterQuery);
 
 		SessionFactory sessionFactory = HibernateUtil.getSessionFactory();
