@@ -18,7 +18,7 @@ import com.nivtek.ecommerce.util.HibernateUtil;
  *
  */
 public class AppDynamicFilter {
-	
+
 	private static boolean hasFilters = false;
 
 	/**
@@ -39,7 +39,7 @@ public class AppDynamicFilter {
 
 		// generate our filterquery
 		String filterQuery = createQueryBasedOnInput(filterTodo);
-		
+
 		System.out.println("filter query is: \n" + filterQuery);
 
 		SessionFactory sessionFactory = HibernateUtil.getSessionFactory();
@@ -51,7 +51,8 @@ public class AppDynamicFilter {
 		@SuppressWarnings("unchecked")
 		List<Product> products = query.list();
 
-		System.out.println(products.size() + " Items Found!! \n" + products);
+		System.out.println("\n[ " + products.size() + " ] Items Found!!");
+		products.forEach(System.out::println);
 
 		session.close();
 		sessionFactory.close();
@@ -64,10 +65,10 @@ public class AppDynamicFilter {
 	private static String getFilterInputs() {
 		Scanner scanner = new Scanner(System.in);
 
-		System.out.println("======================");
+		System.out.println("========================================");
 		System.out.println(
-				"enter filters with comma separated key value pairs\neg. brand:lg,rating:4,pricerange:300-600,mincapacity:35");
-		System.out.println("======================");
+				" Enter the filters with comma separated key value pairs\n eg. brand:lg,rating:4,pricerange:300-600,mincapacity:35");
+		System.out.println("========================================");
 
 		System.out.print("Enter Your Desired Filters: ");
 		String inputFilters = scanner.next();
@@ -81,9 +82,9 @@ public class AppDynamicFilter {
 	 * @return String which is filter Query we use in session.createQuery();
 	 */
 	private static String createQueryBasedOnInput(HashMap<String, String> filterTodo) {
-		
+
 		String FILTER_QUERY = "FROM Product ";
-		
+
 		StringBuilder sbldr = new StringBuilder(FILTER_QUERY);
 
 		for (@SuppressWarnings("rawtypes")
@@ -91,10 +92,9 @@ public class AppDynamicFilter {
 
 			// if filterBy Brand is present:
 			if (m.getKey().equals("brand")) {
-				
-				sbldr = checkIfFilters(sbldr);
 
-				sbldr.append(" brand in " + m.getValue());
+				sbldr = checkIfFilters(sbldr);
+				sbldr.append(" brand in ('" + m.getValue() + "') ");
 
 			}
 
@@ -110,9 +110,7 @@ public class AppDynamicFilter {
 			if (m.getKey().equals("pricerange")) {
 
 				sbldr = checkIfFilters(sbldr);
-
 				String[] priceRange = m.getValue().toString().split("-");
-
 				sbldr.append(" price between " + priceRange[0] + " AND " + priceRange[1]);
 
 			}
@@ -121,7 +119,6 @@ public class AppDynamicFilter {
 			if (m.getKey().equals("mincapacity")) {
 
 				sbldr = checkIfFilters(sbldr);
-
 				sbldr.append(" capacity >= " + m.getValue());
 
 			}
@@ -131,6 +128,11 @@ public class AppDynamicFilter {
 		return sbldr.toString();
 	}
 
+	/**
+	 * @param sbldr
+	 * @return query with AND appended if some filter already present else append
+	 *         WHERE if no filter appended yet.
+	 */
 	private static StringBuilder checkIfFilters(StringBuilder sbldr) {
 		if (hasFilters)
 			sbldr.append(" AND ");
