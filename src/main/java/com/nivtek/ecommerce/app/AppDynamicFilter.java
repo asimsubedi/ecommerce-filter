@@ -7,6 +7,10 @@ import java.util.Map;
 import java.util.Scanner;
 import java.util.stream.Collectors;
 
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
+
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.query.Query;
@@ -41,6 +45,16 @@ public class AppDynamicFilter {
 
 		SessionFactory sessionFactory = HibernateUtil.getSessionFactory();
 		Session session = sessionFactory.openSession();
+		
+		CriteriaBuilder builder = session.getCriteriaBuilder();
+		CriteriaQuery<Product> criteriaQuery = builder.createQuery(Product.class);
+		
+		Root<Product> root = criteriaQuery.from(Product.class);
+		
+		// need to append conditions here
+		
+		criteriaQuery.select(root);
+		
 
 		@SuppressWarnings("rawtypes")
 		Query query = session.createQuery(filterQuery);
