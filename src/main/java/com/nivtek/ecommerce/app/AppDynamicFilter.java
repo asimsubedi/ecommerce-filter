@@ -1,5 +1,6 @@
 package com.nivtek.ecommerce.app;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -9,6 +10,7 @@ import java.util.stream.Collectors;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
 import org.hibernate.Session;
@@ -24,13 +26,23 @@ import com.nivtek.ecommerce.util.HibernateUtil;
  */
 public class AppDynamicFilter {
 
-	private static boolean hasFilters = false;
+	private SessionFactory sessionFactory;
+	private Session session;
+	private CriteriaBuilder builder;
+	private CriteriaQuery<Product> criteriaQuery;
+	private Root<Product> root;
+	private List<Predicate> predicates;
 
 	/**
+	 * This is the main method. Nothing special just calling getInputFilter Method
+	 * and then converting that string into hashmap of filter criteria and filter
+	 * query,Then calling filteredProducts() method that does all the action
+	 * 
 	 * @param args
 	 */
 	public static void main(String[] args) {
 
+		AppDynamicFilter app = new AppDynamicFilter();
 		Map<String, String> filterTodo = new HashMap<String, String>();
 
 		String userInputs = getFilterInputs();
@@ -39,46 +51,22 @@ public class AppDynamicFilter {
 		filterTodo = Arrays.asList(userInputs.trim().split(",")).stream().map(str -> str.split(":"))
 				.collect(Collectors.toMap(str -> str[0], str -> str[1]));
 
-		// generate our filter query
-		String filterQuery = createQueryBasedOnInput(filterTodo);
-		System.out.println("filter query is: \n" + filterQuery);
-
-		SessionFactory sessionFactory = HibernateUtil.getSessionFactory();
-		Session session = sessionFactory.openSession();
-		
-		CriteriaBuilder builder = session.getCriteriaBuilder();
-		CriteriaQuery<Product> criteriaQuery = builder.createQuery(Product.class);
-		
-		Root<Product> root = criteriaQuery.from(Product.class);
-		
-		// need to append conditions here
-		
-		criteriaQuery.select(root);
-		
-
-		@SuppressWarnings("rawtypes")
-		Query query = session.createQuery(filterQuery);
-
-		@SuppressWarnings("unchecked")
-		List<Product> products = query.list();
-
-		System.out.println("\n[ " + products.size() + " ] Items Found!!");
-		products.forEach(System.out::println);
-
-		session.close();
-		sessionFactory.close();
+		app.getFilteredProducts(filterTodo);
 
 	}
 
 	/**
+	 * This method is just asking for the filter needs from user using the scanner
+	 * and returning it as string. nothing else.
+	 * 
 	 * @return userInput Filter String
 	 */
 	private static String getFilterInputs() {
 		Scanner scanner = new Scanner(System.in);
 
 		System.out.println("========================================");
-		System.out.println(
-				" Enter the filters with comma separated key value pairs\n eg. brand:lg,rating:4,pricerange:300-600,mincapacity:35");
+		System.out.println(" Enter the filters with comma separated key value pairs\n"
+				+ " eg. brand:lg,rating:4,pricerange:300-600,mincapacity:35");
 		System.out.println("========================================");
 
 		System.out.print("Enter Your Desired Filters: ");
@@ -89,70 +77,77 @@ public class AppDynamicFilter {
 	}
 
 	/**
+	 * This method is handling everything from creating session, predicates and
+	 * doing query and printing all the query result products
+	 * 
+	 * @param filterTodo
+	 */
+	private void getFilteredProducts(Map<String, String> filterTodo) {
+		sessionFactory = HibernateUtil.getSessionFactory();
+		session = sessionFactory.openSession();
+
+		builder = session.getCriteriaBuilder();
+		criteriaQuery = builder.createQuery(Product.class);
+
+		root = criteriaQuery.from(Product.class);
+
+		predicates = new ArrayList<Predicate>();
+		criteriaQuery.select(root);
+
+		generatePredicatesBasedonCondition(filterTodo);
+
+		criteriaQuery.where(predicates.toArray(new Predicate[predicates.size()]));
+
+		Query<Product> queryC = session.createQuery(criteriaQuery);
+		List<Product> products = queryC.list();
+
+		System.out.println("\n[ " + products.size() + " ] Items Found!!");
+		products.forEach(System.out::println);
+
+		session.close();
+		sessionFactory.close();
+	}
+
+	/**
 	 * @param filterTodo
 	 * @return String which is filter Query we use in session.createQuery();
 	 */
-	private static String createQueryBasedOnInput(Map<String, String> filterTodo) {
-
-		String FILTER_QUERY = "FROM Product ";
-
-		StringBuilder sbldr = new StringBuilder(FILTER_QUERY);
+	private void generatePredicatesBasedonCondition(Map<String, String> filterTodo) {
 
 		for (@SuppressWarnings("rawtypes")
 		Map.Entry m : filterTodo.entrySet()) {
 
 			// if filterBy Brand is present:
-			if (m.getKey().equals("brand")) {
 
-				sbldr = checkIfFilters(sbldr);
-				sbldr.append(" brand in ('" + m.getValue() + "') ");
+			if (m.getKey().equals("brand")) {
+				predicates.add(builder.and(root.get("brand").in(m.getValue())));
 
 			}
 
 			// if filterBy rating is present:
-			if (m.getKey().equals("rating")) {
 
-				sbldr = checkIfFilters(sbldr);
-				sbldr.append(" rating >= " + m.getValue());
+			if (m.getKey().equals("rating")) {
+				predicates.add(builder.ge(root.get("rating"), Integer.parseInt((String) m.getValue())));
 
 			}
 
 			// if filterBy Price is present:
+
 			if (m.getKey().equals("pricerange")) {
 
-				sbldr = checkIfFilters(sbldr);
 				String[] priceRange = m.getValue().toString().split("-");
-				sbldr.append(" price between " + priceRange[0] + " AND " + priceRange[1]);
+				predicates.add(builder.ge(root.get("price"), Float.parseFloat(priceRange[0])));
+				predicates.add(builder.le(root.get("price"), Float.parseFloat(priceRange[1])));
 
 			}
 
 			// if filterBy capacity is present:
 			if (m.getKey().equals("mincapacity")) {
-
-				sbldr = checkIfFilters(sbldr);
-				sbldr.append(" capacity >= " + m.getValue());
+				predicates.add(builder.ge(root.get("capacity"), Integer.parseInt((String) m.getValue())));
 
 			}
 
 		}
-
-		return sbldr.toString();
 	}
 
-	/**
-	 * @param sbldr
-	 * @return query with AND appended if some filter already present else append
-	 *         WHERE if no filter appended yet.
-	 */
-	private static StringBuilder checkIfFilters(StringBuilder sbldr) {
-		if (hasFilters)
-			sbldr.append(" AND ");
-
-		else {
-			sbldr.append(" WHERE ");
-			hasFilters = true;
-
-		}
-		return sbldr;
-	}
 }
